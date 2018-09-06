@@ -848,9 +848,10 @@ Kategorie_SummenBar <- ggplot(data = Kategorie_Summen, aes(x = variable, y = val
    ggtitle("Exportvolumen pro Kategorie\n2000-2016") +
    theme(axis.text.x = element_text(angle=45, vjust=0.5))
  
-# compare saudi-arabien, vereinigte emirate, deutschland, usa
+# compare selected counries
+coutries<-c("USA", "Deutschland", "Vereinigte Arabische Emirate", "Saudi-Arabien")
 Kategorie_LandJahr <- export_restructured  %>% 
-  filter(Land %in% c("USA", "Deutschland", "Vereinigte Arabische Emirate", "Saudi-Arabien")) %>%
+  filter(Land %in% countries) %>%
    group_by(variable, Land) %>%
    summarize(value = sum(value)) %>% # Exportvolumensummen pro Kategorie berechnen
    arrange(desc(value)) # der Größe nach sortieren
