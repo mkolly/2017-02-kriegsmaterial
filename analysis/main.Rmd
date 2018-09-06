@@ -682,10 +682,6 @@ plot[[i]] <- ggplot(data = laenderSummen10SortiertForBar_[[i]], aes(x = factor(L
 rm(Top10, df1, laenderAndere, laenderAndere_, laenderSummen10Sortiert, laenderSummen10SortiertForBar, laenderSummen10SortiertForBar_, yearsTop10, data, Laendersummen_, laenderSummenBar, plot, Top10_, valmio_2, valmio_4)
 ```
 
-
-
-
-
 Die Top 10 2000-2016 sind vor allem europäische Länder sowie die USA, Saudi-Arabien und die Vereinigten Arabischen Emirate. Mit großem Abstand auf Platz 1 befindet sich Deutschland, das hauptsächlich KM6 (Panzer- und andere Landfahrzeuge) und KM3 (Munition für die in KM 1, 2 oder 12 erfassten Waffen) gekauft hat. Die Emirate und die USA fallen durch ihren überdurchschnittlichen Anteil von KM10 (Bemannte und unbemannte Luftfahrzeuge inkl. entsprechende Triebwerke) auf. 14/17 Mal befindet sich Deutschland auf Platz 1.
 
 
@@ -1206,5 +1202,3 @@ regionvergleich
 rm(Afrika, Asien, AustralienOzeanien, Europa, Nordamerika, Mittelamerika, regions, Südamerika, kontinente, valmio_13, regionvergleich)
 ```
 Den grössten Anteil am Exportvolumen nehmen europäische Länder ein. Um 2011 herum nehmen Ausfuhren an asiatische Länder zu. Der Rückgang des Exportvolumens von 2015 an ist u.a. dem Rückgang von Auslieferungen an Europa geschuldet. Die Anteile von Asien 2014 bis 2016 dürften zum Grossteil an Indien und Indonesien sowie Pakistan gehen. 
-
-""
