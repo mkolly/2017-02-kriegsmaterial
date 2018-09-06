@@ -139,10 +139,11 @@ library(readxl)
 library(stringr)
 library(scales)
 library(grid)
-library(reshape)",
+library(reshape)
+library(rgdal)",
 file = "manifest.R")
 
-package_date <- "2017-06-01"
+package_date <- "2018-09-01"
 
 ```
 
@@ -188,16 +189,16 @@ sessionInfo()
 #### Daten reinladen und typisieren
 
 ```{r load data}
-# 2000 - 2016
+# 2000 - 2017
 
 #setwd("/Users/MarieLou/SRF/1601-arms-exports/preprocessing")
 
 # Alle Exceltabellen liegen aufsteigend in einer Arbeitsmappe, so dass sheet1 = 2000, sheet2 = 2001 usw
 # lade alle sheets der Arbeitsmappe als data frames in eine Liste sheets
 sheets <- list()
-for(i in 1:17){
- sheets[[i]] <- read_excel("input/2000-2016.xlsx", sheet = i)
- k <- c(2000:2016)
+for(i in 1:18){
+ sheets[[i]] <- read_excel("input/2000-2017.xlsx", sheet = i)
+ k <- c(2000:2017)
  sheets[[i]]$Jahr <- k[i]
 }
 # Liste "sheets" enthält nun einzelne data frames, wobei sheets[[1]]= 2000, sheets[[2]]= 2001 usw. 
@@ -334,7 +335,7 @@ sort(unique(export_restructured$Land)) # Überblick über die Ländernamen, um e
 
 ```{r output export_restructured}
 export_csv <- export_restructured %>% dplyr::rename(Kategorie = variable, Wert = value)
-write.csv(export_csv, file = "output/export.csv", fileEncoding = "utf-8", row.names = F)
+write.csv(export_csv, file = "output/export_2017.csv", fileEncoding = "utf-8", row.names = F)
 rm(export_csv)
 ```
 
@@ -411,6 +412,13 @@ Export <- export_restructured %>%
    dplyr::summarise(value = sum(value)) # fasst Exportvolumen nach Jahren zusammen
 
 Export # Zeigt Exportvolumen gesamt pro Jahr
+
+# add total export value for JAN-JUN 2018 
+newData<-data.frame("Jahr"=2018, "value"=205188633)
+Export<-rbind(Export, newData)
+Export
+
+#SRF
 sum(Export$value) # Summe aller Exporte der letzten 15 Jahre
 sum(Export$value[Export$Jahr >= 2010]) # Summe aller Exporter der letzten 5 Jahre
 sum(Export$value[Export$Jahr >= 2010])/sum(Export$value)*100 # Anteil der Exporte der letzten 5 Jahre am Gesamtexportvolumen
@@ -444,7 +452,7 @@ An wie viele verschiedene Länder hat die Schweiz pro Jahr Kriegsgüter exportie
 # Berechne Anzahl der belieferten Länder pro Jahr
 
 AnzahlLaender <- list() # leere Zielliste
-for(i in 2000:2016){ # Schleife über die Daten aus den Jahren 2000 bis 2014
+for(i in 2000:2017){ # Schleife über die Daten aus den Jahren 2000 bis 2014
 AnzahlLaender[[i]] <- length(unique(export_restructured[export_restructured$Jahr==i,]$Land)) # Anzahl der Länder werden nach Jahr berechnet und das Ergebnis in der Liste abgelegt
 }
 
@@ -498,7 +506,7 @@ Rüstungsunternehmen aus der Schweiz belieferten im Zeitraum von 2000 bis 2016 1
 Mit welchen 10 Ländern wird am meisten gehandelt?
 
 ```{r top 10 countries, fig.height = 8}
-# 2000-2016 gesamt
+# 2000-2017 gesamt
 # erstelle data frame, der nur die zehn Länder mit den höchsten Exportvolumen des Zeitabschnitts enthält  
 
 Top10 <- export_restructured %>% 
@@ -506,6 +514,37 @@ Top10 <- export_restructured %>%
    summarize(value = sum(value)) %>%
    arrange(desc(value)) %>%
    slice(1:10)
+
+
+# development of export to Top 10 over time
+Top10time<-export_restructured %>%
+  filter(Land %in% Top10$Land) %>%
+  group_by(Land,Jahr) %>%
+  summarise(value=sum(value))
+
+ggplot(Top10time, aes(x=Jahr, y=value, group=Land, col=Land))+
+  geom_line()
+
+# development of export to any country or group of countries over time
+country<-"Katar"
+countryXtime<-export_restructured %>% 
+   group_by(Land, Jahr) %>%
+   summarize(value = sum(value)) %>%
+   filter(Land %in% country) %>%
+   arrange(Jahr)
+   
+  
+countryXtime
+
+
+# compare 2000 vs. 2017 for every export country, arrange by difference
+compare0017<-export_restructured %>%
+  group_by(Land, Jahr) %>%
+  summarize(value=sum(value)) %>%
+  filter(Jahr %in% c(2000, 2017)) %>%
+  spread(key=Jahr, value=value) %>%
+  mutate(diff=`2017`-`2000`) %>%
+  arrange(desc(diff))
 
 # filtere alle Informationen nur dieser zehn Länder aus den Gesamtdaten heraus
  laenderSummen10Sortiert <- export_restructured  %>%
@@ -643,13 +682,17 @@ plot[[i]] <- ggplot(data = laenderSummen10SortiertForBar_[[i]], aes(x = factor(L
 rm(Top10, df1, laenderAndere, laenderAndere_, laenderSummen10Sortiert, laenderSummen10SortiertForBar, laenderSummen10SortiertForBar_, yearsTop10, data, Laendersummen_, laenderSummenBar, plot, Top10_, valmio_2, valmio_4)
 ```
 
+
+
+
+
 Die Top 10 2000-2016 sind vor allem europäische Länder sowie die USA, Saudi-Arabien und die Vereinigten Arabischen Emirate. Mit großem Abstand auf Platz 1 befindet sich Deutschland, das hauptsächlich KM6 (Panzer- und andere Landfahrzeuge) und KM3 (Munition für die in KM 1, 2 oder 12 erfassten Waffen) gekauft hat. Die Emirate und die USA fallen durch ihren überdurchschnittlichen Anteil von KM10 (Bemannte und unbemannte Luftfahrzeuge inkl. entsprechende Triebwerke) auf. 14/17 Mal befindet sich Deutschland auf Platz 1.
 
 
 Wie viel Prozent des Exportvolumens fallen auf die 5 Länder mit dem grössten Exportvolumen? 
 
 ```{r export volume top 5 contries}
-# 2000 bis 2016 gesamt
+# 2000 bis 2017 gesamt
 laenderSummen5Sortiert <- export_restructured %>%
    group_by(Land) %>%
    summarize(value = sum(value)) %>%
@@ -709,12 +752,87 @@ rm(laenderSummen5proJahr, laenderSummen5Sortiert, LAnteilTop5, Top5, AnteilTop5,
 
 Die Top 5 2000-2016 machen fast 47% des Exportvolumens aus. Der Anteil pro Jahr unterliegt minimalen Schwankungen, ist insgesamt von 2000 auf 2014 um knapp 19% gestiegen und 2015 wieder um 12 gesunken. 
 
+
+Welche Länder hat die Schweiz im Zeitraum 2000-2016 bzw. 2017 mit Waffen beliefert? --> Wir zeigen sie auf einer Weltkarte
+
+```{r map map export countries}
+
+# get unique country names for exports in 2017
+exportCntry2017<-export_restructured %>%
+  filter(Jahr==2017) %>%
+  distinct(Land) %>%
+  mutate(color="blue")
+
+# get unique country names for exports anytime
+exportCntryAnytime<-export_restructured %>%
+  filter(!Land %in% exportCntry2017$Land) %>% # get rid of those that were exported to in 2017
+  distinct(Land) %>%
+  mutate(color="lightblue")
+
+# create dataframe for map
+exportCntryType<-rbind(exportCntry2017, exportCntryAnytime)
+
+# get shapefile with German country name variable (https://www.naturalearthdata.com/downloads/110m-cultural-vectors/)
+worldmap<-readOGR("input/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp")
+
+# identify country names that are not spelled as in shapefile
+exportCntryType$Land[!exportCntryType$Land %in% worldmap$NAME_DE] 
+
+# manually rewrite
+exportCntryType$Land[exportCntryType$Land == "Bosnien-Herzegowina"] <- "Bosnien und Herzegowina"
+exportCntryType$Land[exportCntryType$Land == "Grossbritannien"] <- "Vereinigtes Königreich"
+exportCntryType$Land[exportCntryType$Land == "Tschechische Rep."] <- "Tschechien"
+exportCntryType$Land[exportCntryType$Land == "Trinidad Tobago"] <- "Trinidad und Tobago"
+exportCntryType$Land[exportCntryType$Land == "Zypern"] <- "Republik Zypern"
+exportCntryType$Land[exportCntryType$Land == "China"] <- "Volksrepublik China"
+exportCntryType$Land[exportCntryType$Land == "Finnnland"] <- "Finnland"
+exportCntryType$Land[exportCntryType$Land == "Hong-Kong"] <- "Hongkong"
+exportCntryType$Land[exportCntryType$Land == "USA"] <- "Vereinigte Staaten"
+exportCntryType$Land[exportCntryType$Land == "Zypern"] <- "Republik Zypern"
+
+# special case Niederländische Antillen, until 2010. Now: Curaçao, Sint Maarten (autonomous), Bonaire, Saba, St. Eustatius (part of Netherlands)
+exportCntryType[grep("Nied", exportCntryType$Land), ]
+antillen<-data.frame("Land"=c("Curaçao", "Sint Maarten"), "color"=c("lightblue","lightblue"))
+exportCntryType<-rbind(exportCntryType, antillen)
+
+# get rid of unused countries
+exportCntryType<-exportCntryType[-which(exportCntryType$Land=="Niederländische Antillen"),]
+exportCntryType<-exportCntryType[-which(exportCntryType$Land=="Heiliger Stuhl"),] # address Heiliger Stuhl = Vatikan in a footnote
+
+# augment color vector with the countries Switzerland did not export to
+exportCntryType_augm<-merge(exportCntryType, worldmap, by.x="Land", by.y="NAME_DE", all=T)
+exportCntryType_augm$color[is.na(exportCntryType_augm$color)] <- "lightgray"
+
+#fortify shapefile for ggplot
+worldmap_fort<-fortify(worldmap, region="NAME_DE")
+
+# plot map
+ggplot() + 
+    geom_map(data = exportCntryType_augm, aes(map_id = Land, fill = color), map = worldmap_fort, colour="white", lwd=0.005) + 
+    expand_limits(x = worldmap_fort$long, y = worldmap_fort$lat) + 
+    coord_equal() +
+    labs(title = "In diese Länder hat die Schweiz seit der Jahrtausendwende Waffen exportiert", 
+       caption = "In den Jahren 2009 und 2015 importierte auch der Vatikan Kriegsmaterial aus der Schweiz")+
+    scale_fill_identity(labels = c(" Im Jahr 2017", "Mindestens einmal im Zeitraum 2000-2016"), breaks=c("blue", "lightblue"), guide = guide_legend(direction="vertical", label.position = "right", keywidth=1, keyheight=.6)) +
+    theme(line = element_blank(),
+          legend.title = element_blank(),
+          plot.title = element_text(),
+          plot.caption = element_text(hjust = 0),
+          panel.background = element_blank(),
+          axis.title=element_blank(),
+          axis.text=element_blank(),
+          axis.ticks=element_blank(),
+          legend.text=element_text())
+```
+
+
+
 #### KM-Kategorien
 
 Wie verteilt sich das Exportvolumen auf die einzelnen Kategorien? 
 
 ```{r export volume categories, fig.height = 7}
-# 2000-2016 gesamt 
+# 2000-2017 gesamt 
 
 Kategorie_Summen <- export_restructured  %>% 
    group_by(variable) %>%
@@ -734,8 +852,13 @@ Kategorie_SummenBar <- ggplot(data = Kategorie_Summen, aes(x = variable, y = val
    ggtitle("Exportvolumen pro Kategorie\n2000-2016") +
    theme(axis.text.x = element_text(angle=45, vjust=0.5))
  
-Kategorie_SummenBar
-
+# compare saudi-arabien, vereinigte emirate, deutschland, usa
+Kategorie_LandJahr <- export_restructured  %>% 
+  filter(Land %in% c("USA", "Deutschland", "Vereinigte Arabische Emirate", "Saudi-Arabien")) %>%
+   group_by(variable, Land) %>%
+   summarize(value = sum(value)) %>% # Exportvolumensummen pro Kategorie berechnen
+   arrange(desc(value)) # der Größe nach sortieren
+  
 # speichern der Grafik als png im Ordner output 
 #png(filename = "output/VolumenanteilnachKat.png", width = 624, height = 468)
 #Kategorie_SummenBar + theme_srf() + sources("SECO", vpos = "top")
@@ -1084,3 +1207,4 @@ rm(Afrika, Asien, AustralienOzeanien, Europa, Nordamerika, Mittelamerika, region
 ```
 Den grössten Anteil am Exportvolumen nehmen europäische Länder ein. Um 2011 herum nehmen Ausfuhren an asiatische Länder zu. Der Rückgang des Exportvolumens von 2015 an ist u.a. dem Rückgang von Auslieferungen an Europa geschuldet. Die Anteile von Asien 2014 bis 2016 dürften zum Grossteil an Indien und Indonesien sowie Pakistan gehen. 
 
+""
