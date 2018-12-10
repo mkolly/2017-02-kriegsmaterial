@@ -140,7 +140,6 @@ library(stringr)
 library(scales)
 library(grid)
 library(reshape)
-library(countrycode)
 library(rgdal)
 library(countrycode)",
 file = "manifest.R")
@@ -438,7 +437,7 @@ ExportBar <- ggplot(data = Export, aes(x = Jahr, y = volmio_1)) +
    theme(axis.text.x = element_text(angle=0, vjust=0.5))
 
 ExportBar
-Export
+
 # speichern der Grafik als png im Ordner output
 #png(filename = "output/ExportvolumenNachJahr.png", width = 624, height = 468)
 #ExportBar + theme_srf() + sources("SECO", vpos = "top")+theme(axis.text.x = element_text(angle=-30, #vjust=0.5))
@@ -462,7 +461,6 @@ Anzahldat <- do.call(rbind.data.frame, AnzahlLaender[2000:2017]) # Anzahlliste z
 names(Anzahldat) <- c("Anzahl") # Namen der Anzahlspalte ändern
 Anzahldat$Jahr <- 2000:2017 # Zweite Spalte mit Jahreszahlen hinzufügen
 Anzahldat # data frame mit Anzahl belieferter Länder pro Jahr
-
 
 # Barplot der Azahl belieferter Länder nach Jahr
 AnzahlLaenderBar <- ggplot(data = Anzahldat, aes(x = Jahr, y = Anzahl)) + 
@@ -501,11 +499,10 @@ for(i in 2000:2017){
 Stamm <- Reduce(intersect, Stammlaender[2000:2017]) # Vektor der Länder, die in jedem Jahr beliefert wurden
 
 length(Stamm) # Anzahl der Länder, die in jedem Jahr unter den Belieferten zu finden sind
-Stamm
 rm(Stamm, Stammlaender)
 ```
 
-Rüstungsunternehmen aus der Schweiz belieferten im Zeitraum von 2000 bis 2017 130 verschiedene Länder mit Kriegsgütern, im Schnitt jährlich 67 Länder. Es gibt 27 Stammländer, an die jedes Jahr geliefert wurde.  
+Rüstungsunternehmen aus der Schweiz belieferten im Zeitraum von 2000 bis 2017 129 verschiedene Länder mit Kriegsgütern, im Schnitt jährlich 67 Länder. Es gibt 27 Stammländer, an die jedes Jahr geliefert wurde.  
 
 Mit welchen 10 Ländern wird am meisten gehandelt?
 
@@ -518,6 +515,31 @@ Top10 <- export_restructured %>%
    summarize(value = sum(value)) %>%
    arrange(desc(value)) %>%
    slice(1:10)
+
+# development of export to Top 10 over time	
+Top10time<-export_restructured %>%	
+  filter(Land %in% Top10$Land) %>%	
+  group_by(Land,Jahr) %>%	
+  summarise(value=sum(value))	
+ ggplot(Top10time, aes(x=Jahr, y=value, group=Land, col=Land))+	
+  geom_line()	
+ 
+ # development of export to any country or group of countries over time	
+country<-"Katar"	
+countryXtime<-export_restructured %>% 	
+   group_by(Land, Jahr) %>%	
+   summarize(value = sum(value)) %>%	
+   filter(Land %in% country) %>%	
+   arrange(Jahr)	
+
+ # compare 2000 vs. 2017 for every export country, arrange by difference	
+compare0017<-export_restructured %>%	
+  group_by(Land, Jahr) %>%	
+  summarize(value=sum(value)) %>%	
+  filter(Jahr %in% c(2000, 2017)) %>%	
+  spread(key=Jahr, value=value) %>%	
+  mutate(diff=`2017`-`2000`) %>%	
+  arrange(desc(diff))	
 
 # filtere alle Informationen nur dieser zehn Länder aus den Gesamtdaten heraus
  laenderSummen10Sortiert <- export_restructured  %>%
@@ -698,8 +720,6 @@ cntryMaterial_prop <- export_restructured_recoded %>%
   group_by(variable) %>%
   mutate("proportion"=100*value/sum)
 
-head(cntryMaterial_prop,10)
-
 ggplot(cntryMaterial_prop, aes(x=Jahr, y=proportion, group=variable, fill=variable))+
   geom_bar(stat="identity") +
   facet_wrap(~factor(Land))+
@@ -710,21 +730,6 @@ ggsave("weaponXtime_country.pdf", width=12)
 countries<-c("Deutschland", "USA", "Vereinigte Arabische Emirate", "Grossbritannien", "Dänemark", "Saudi-Arabien")
 cntryMaterial_prop$variable<-as.factor(cntryMaterial_prop$variable)
 cntryMaterial_prop$Land<-as.factor(cntryMaterial_prop$Land)
-
-article<-cntryMaterial_prop %>% 
-  filter(Land %in% countries) %>%
-  select(Jahr, Land, variable, proportion)%>%
-  spread(variable, proportion)%>%
-  arrange(Land, Jahr) %>%
-  select(Land, Jahr, KM2, KM3, KM6, KM10, KM5, Andere) %>%
-  rename(`Waffen`=KM2, Munition=KM3, Panzer=KM6, Feuerleiteinrichtungen=KM5, Luftfahrzeuge=KM10)
-
-ggplot(gather(article, key=variable, value=proportion, Waffen:Andere), aes(x=Jahr, y=proportion, group=variable, fill=variable))+
-  geom_bar(stat="identity")+
-  facet_wrap(~factor(Land))+
-  theme_minimal()#+
-  ggsave("weaponXtime_cntry_selection.pdf", width=12)
-
 
 #visualize as absolute values
 cntryMaterial_prop <- export_restructured_recoded %>%
@@ -741,8 +746,6 @@ ggplot(cntryMaterial_prop,aes(x=Jahr, y=value, group=variable, fill=variable))+
   geom_bar(stat="identity")+
   facet_wrap(~factor(Land))+
   theme_minimal()
-
-years201317 %>% arrange(desc(value)) %>% print(., n=20)
 
 ```
 
@@ -1042,7 +1045,6 @@ KatexportNachJahrBar <- ggplot(data = KatexportNachJahr, aes(x = Jahr, y = valmi
    
 KatexportNachJahrBar
 
-
 # Dieselbe Grafik, mit Proportionen
 yearMaterialTotal_prop <- export_restructured %>%
   group_by(Jahr, variable) %>%
@@ -1053,7 +1055,6 @@ ggplot(yearMaterialTotal_prop, aes(x=Jahr, y=proportion, group=variable, fill=va
   geom_bar(stat="identity") +
   theme(axis.text.x = element_text(angle = 45))+
 ggsave("weaponXtime.pdf", width=12)
-
 
 # speichern der Grafik als png im Ordner output 
 #png(filename = "output/VolumenanteilnachKatproJahr.png", width = 624, height = 468)
@@ -1103,7 +1104,6 @@ TopKatexportNachJahrBar
 #png(filename = "output/TopVolumenanteilnachKatproJahr.png", width = 624, height = 468)
 #TopKatexportNachJahrBar + theme_srf() + sources("SECO", vpos = "top")+theme(axis.text.x = #element_text(angle=-30, vjust=0.5))
 #dev.off()
-
 rm(Export, Kategorie_Anteil, Kategorie_Summen, KatexportNachJahr, TopKatexportNachJahr, TopKatexportNachJahrBar, gesamt, Kategorie_SummenBar, KatexportNachJahrBar, valmio_5, valmio_6, valmio_7)
 ```
 
