@@ -10,4 +10,5 @@ auth
 .~lock*
 manifest.R
 output/ignore/*
+.DS_Store
 input/ignore/*
