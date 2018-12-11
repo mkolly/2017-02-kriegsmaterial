@@ -417,9 +417,7 @@ Export # Zeigt Exportvolumen gesamt pro Jahr
 # add total export value for JAN-JUN 2018 
 newData<-data.frame("Jahr"=2018, "value"=205188633)
 Export<-rbind(Export, newData)
-Export
 
-#SRF
 sum(Export$value) # Summe aller Exporte der letzten 15 Jahre
 sum(Export$value[Export$Jahr >= 2010]) # Summe aller Exporter der letzten 5 Jahre
 sum(Export$value[Export$Jahr >= 2010])/sum(Export$value)*100 # Anteil der Exporte der letzten 5 Jahre am Gesamtexportvolumen
@@ -516,31 +514,6 @@ Top10 <- export_restructured %>%
    arrange(desc(value)) %>%
    slice(1:10)
 
-# development of export to Top 10 over time	
-Top10time<-export_restructured %>%	
-  filter(Land %in% Top10$Land) %>%	
-  group_by(Land,Jahr) %>%	
-  summarise(value=sum(value))	
- ggplot(Top10time, aes(x=Jahr, y=value, group=Land, col=Land))+	
-  geom_line()	
- 
- # development of export to any country or group of countries over time	
-country<-"Katar"	
-countryXtime<-export_restructured %>% 	
-   group_by(Land, Jahr) %>%	
-   summarize(value = sum(value)) %>%	
-   filter(Land %in% country) %>%	
-   arrange(Jahr)	
-
- # compare 2000 vs. 2017 for every export country, arrange by difference	
-compare0017<-export_restructured %>%	
-  group_by(Land, Jahr) %>%	
-  summarize(value=sum(value)) %>%	
-  filter(Jahr %in% c(2000, 2017)) %>%	
-  spread(key=Jahr, value=value) %>%	
-  mutate(diff=`2017`-`2000`) %>%	
-  arrange(desc(diff))	
-
 # filtere alle Informationen nur dieser zehn Länder aus den Gesamtdaten heraus
  laenderSummen10Sortiert <- export_restructured  %>%
                             filter(Land %in% Top10$Land) %>%
@@ -581,7 +554,6 @@ laenderSummenBar <- ggplot(data = laenderSummen10SortiertForBar, aes(x = factor(
    xlab("Land")
 
 laenderSummenBar 
-
 # speichern der Grafik als png im Ordner output   
 #png(filename = "output/ExportvolumenNachJahrTop5.png", width = 624, height = 468)
 #laenderSummenBar
@@ -603,8 +575,6 @@ laenderSummenBar_prop <- ggplot(data = laenderSummen10SortiertForBar_prop, aes(x
    theme(axis.text.x = element_text(angle=40, vjust=1, hjust=1, size=10))+
    guides(fill=guide_legend(title="Kategorie", reverse = T))+
    xlab("Land")
-
-laenderSummenBar_prop
 
 # erstelle nach dem gleichen Muster die gleiche Grafik über eine Schleife für jedes Jahr einzeln
 Top10_ <- list()
@@ -760,10 +730,8 @@ Top10time<-export_restructured %>%
   group_by(Land,Jahr) %>%
   summarise(value=sum(value))
 
-
 ggplot(Top10time, aes(x=Jahr, y=value, group=Land, col=Land))+
   geom_line()
-
 
 # development of export to countries over time
 countryXtime<-export_restructured %>% 
@@ -786,7 +754,6 @@ countryXtime %>%
   facet_wrap(~Land)+
   theme_minimal()+
   scale_y_continuous(labels=c(50000000, 10000000, 150000000, 200000000))
-
   ggsave("exportXtime_cntry_selection.pdf", width=12)
 
 # visualize top 20
@@ -797,12 +764,6 @@ countryXtime %>%
   facet_wrap(~Land)+
   theme_minimal()
 ggsave("exportXtime_cntry_selection.pdf", width=12)
-
-# reshape and write
-article<- countryXtime %>%
-  filter(Land %in% countries) %>%
-  arrange(Land)
-write.table(article, file="yourpath/data/exportXtime_cntry_selection.txt", sep="\t", row.names=F, quote=F)
 
 # compare 2000 vs. 2017 for every export country, arrange by difference
 compare0017<-export_restructured %>%
