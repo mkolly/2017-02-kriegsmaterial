@@ -826,7 +826,7 @@ AnteilTop5 <- list()
    arrange(desc(value)) %>%
    slice(1:5)
 
-AnteilTop5[[i]] <-  sum(laenderSummen5proJahr$value)/sum(export_restructured[export_restructured$Jahr == i,]$value) * 100 
+AnteilTop5[[i]] <-  paste(sum(laenderSummen5proJahr$value)/sum(export_restructured[export_restructured$Jahr == i,]$value) * 100, "%") 
  }
 
 # Merge Liste der Ergebnisse zu überscihtlicherem data frame
@@ -869,8 +869,9 @@ rm(laenderSummen5proJahr, laenderSummen5Sortiert, LAnteilTop5, Top5, AnteilTop5,
 
 Die Top 5 2000-2016 machen fast 47% des Exportvolumens aus. Der Anteil pro Jahr unterliegt minimalen Schwankungen, ist insgesamt von 2000 auf 2014 um knapp 19% gestiegen und 2015 wieder um 12 gesunken. 
 
+##### Weltkarte
 
-Welche Länder hat die Schweiz im Zeitraum 2000-2016 bzw. 2017 mit Waffen beliefert? --> Wir zeigen sie auf einer Weltkarte
+Welche Länder hat die Schweiz im Zeitraum 2000-2016 bzw. 2017 mit Waffen beliefert? Wir zeigen sie auf einer Karte
 
 ```{r map map export countries}
 
@@ -942,14 +943,13 @@ ggplot() +
           legend.text=element_text())
 ```
 
-
-
 #### KM-Kategorien
 
 Wie verteilt sich das Exportvolumen auf die einzelnen Kategorien? 
 
 ```{r export volume categories, fig.height = 7}
 # 2000-2017 gesamt 
+
 Kategorie_Summen <- export_restructured  %>% 
    group_by(variable) %>%
    summarize(value = sum(value)) %>% # Exportvolumensummen pro Kategorie berechnen
@@ -1329,6 +1329,7 @@ rm(Afrika, Asien, AustralienOzeanien, Europa, Nordamerika, Mittelamerika, region
 ```
 Den grössten Anteil am Exportvolumen nehmen europäische Länder ein. Um 2011 herum nehmen Ausfuhren an asiatische Länder zu. Der Rückgang des Exportvolumens von 2015 an ist u.a. dem Rückgang von Auslieferungen an Europa geschuldet. Die Anteile von Asien 2014 bis 2016 dürften zum Grossteil an Indien und Indonesien sowie Pakistan gehen.
 
+##### Waffenexporte in kriegführende Staaten
 
 Exportiert die Schweiz auch Waffen in Länder, die in interne oder internationale Konflikte verwickelt sind? 
 
